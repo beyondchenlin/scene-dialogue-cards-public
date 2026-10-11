@@ -469,10 +469,14 @@
 }
 /* Keep the earlier tighter desktop rhythm as soon as the top shelf has cards.
    The lesson is now circular and no longer sets a terminal completed flag. */
-@media (min-width: 1100px) and (min-height: 700px) {
-  .game-shell:not([data-archived="0"])[data-layout="stack"][data-flipped="false"] .play-area {
+@media (min-width: 980px) and (min-height: 700px) {
+  /* The collected shelf stays fixed: trim only the gap above the photo. */
+  .game-shell:not([data-archived="0"]):not([data-keyboard="true"])[data-layout="stack"][data-flipped="false"] .card-table {
+    gap: 8px;
+  }
+  .game-shell:not([data-archived="0"]):not([data-keyboard="true"])[data-layout="stack"][data-flipped="false"] .play-area {
     justify-content: flex-start;
-    padding-top: clamp(12px, 1.6vh, 24px);
+    padding-top: 0;
   }
 }
 /* A soft keyboard takes priority over decorative previews and secondary actions.
