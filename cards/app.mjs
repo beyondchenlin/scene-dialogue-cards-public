@@ -18,12 +18,24 @@ let speechEpoch = 0, sequenceEpoch = 0, playing = false, speechFinish = null;
 let micEpoch = 0, micPending = false, micFinalizing = false, micStream = null, recorder = null, recordingTimer = 0;
 let imageEpoch = 0, transitionEpoch = 0;
 let pendingMemoryFocus = null;
+// Cache the actual dimensions of decoded photographs, including imported lessons.
+const imageRatios = new Map();
 
 const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
 const focused = () => lesson.cards[state.snapshot().focusIndex];
 const imagePath = card => orientation === 'portrait' && card.portraitImage ? card.portraitImage : card.image;
 const assetUrl = src => assetUrls.get(src) || new URL(src, location.href).href;
 const currentSrc = () => assetUrl(imagePath(focused()));
+function currentImageRatio() {
+  // The first viewport measurement runs before the example lesson is loaded.
+  if (!lesson || !state) return orientation === 'portrait' ? 3 / 4 : 16 / 9;
+  const src = currentSrc();
+  // Never reuse the preceding photo's dimensions while the new shot is loading.
+  if (picture.currentSrc === src && picture.naturalWidth > 0 && picture.naturalHeight > 0) {
+    return picture.naturalWidth / picture.naturalHeight;
+  }
+  return imageRatios.get(src) || (orientation === 'portrait' && focused().portraitImage ? 3 / 4 : 16 / 9);
+}
 const rect = element => {
   const value = element.getBoundingClientRect();
   return { left: value.left, top: value.top, width: value.width, height: value.height };
@@ -82,7 +94,7 @@ function fitActiveCard() {
     return;
   }
   const viewport = visibleViewport(window), phone = viewport.width <= 690;
-  const ratio = orientation === 'portrait' ? 3 / 4 : 16 / 9;
+  const ratio = currentImageRatio();
   // Cap the desired size before fitting; shrinking the remaining area again would
   // make a phone's picture unusable after the rail and input have grown.
   const targetWidth = split ? 260 : orientation === 'portrait'
@@ -170,6 +182,12 @@ function updateImage() {
   picture.onload = () => {
     if (token !== imageEpoch) return;
     $('image-error').hidden = true;
+    // Match the outer card to the original photo ratio; never crop characters or scenery.
+    const ratio = picture.naturalWidth / picture.naturalHeight;
+    if (Number.isFinite(ratio) && ratio > 0 && imageRatios.get(src) !== ratio) {
+      imageRatios.set(src, ratio);
+      queueLayout();
+    }
   };
   picture.onerror = () => {
     if (token !== imageEpoch) return;

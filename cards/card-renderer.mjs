@@ -46,8 +46,9 @@ const cardFragmentShader = `
     vec3 colour = uPaper;
     if (gl_FrontFacing) {
       // 图片按完整边界装入；纸边之外不裁剪人物或道具。
-      float padding = clamp(min(uCardSize.x, uCardSize.y) * 0.022, 4.0, 10.0);
-      vec2 innerSize = max(vec2(1.0), uCardSize - padding * 2.0);
+      // No cream inner frame: the final card follows the photograph's natural ratio.
+      // Moving cards still use contain to avoid distortion as their rect changes.
+      vec2 innerSize = max(vec2(1.0), uCardSize);
       float fit = min(innerSize.x / uImageSize.x, innerSize.y / uImageSize.y);
       vec2 imageSize = uImageSize * fit;
       vec2 imageUv = p / imageSize + 0.5;
