@@ -1,0 +1,144 @@
+{
+  "schema": "scene-dialogue-cards",
+  "version": 1,
+  "id": "cafe-card-study-v1",
+  "title": "一杯拿铁",
+  "description": "从点单到道谢，跟着八张镜头卡片完成一次咖啡店对话。",
+  "sourceNote": "复用本项目既有原创咖啡点单样片的对白与高清镜头图片。本轮未重新生图。",
+  "cards": [
+    {
+      "id": "line_001",
+      "speaker": "咖啡店员",
+      "english": "Hi! What can I get for you?",
+      "translation": "你好！想喝点什么？",
+      "shotSize": "medium",
+      "image": "../compact/assets/barista-medium__landscape.webp",
+      "portraitImage": "../compact/assets/barista-medium__portrait.webp",
+      "alt": "咖啡店员在吧台后迎接顾客，询问想点的饮品，中景。",
+      "explanation": {
+        "meaning": "店员打招呼，并询问你想点什么饮品。",
+        "usage": "服务人员在咖啡店、餐厅或柜台开始接单时使用。",
+        "focus": "get（拿来／提供）在这里表示为顾客准备饮品；for you（为你）点明服务对象。",
+        "example": "What can I get for you today?",
+        "exampleTranslation": "今天想点些什么？"
+      }
+    },
+    {
+      "id": "line_002",
+      "speaker": "女顾客",
+      "english": "I'd like a latte, please.",
+      "translation": "请给我一杯拿铁。",
+      "shotSize": "medium",
+      "image": "../compact/assets/customer-medium__landscape.webp",
+      "portraitImage": "../compact/assets/customer-medium__portrait.webp",
+      "alt": "女顾客面对店员，在吧台前点一杯拿铁，中景。",
+      "explanation": {
+        "meaning": "顾客礼貌地说出自己想点的饮品。",
+        "usage": "点餐或提出需求时，把饮品名称换成自己需要的东西。",
+        "focus": "I'd like（我想要）是 I would like（我想要）的缩写；后面接想点的东西。",
+        "example": "I'd like a cappuccino, please.",
+        "exampleTranslation": "请给我一杯卡布奇诺。"
+      }
+    },
+    {
+      "id": "line_003",
+      "speaker": "咖啡店员",
+      "english": "Would you like it hot or iced?",
+      "translation": "你想要热的还是冰的？",
+      "shotSize": "medium",
+      "image": "../compact/assets/barista-ots__landscape.webp",
+      "portraitImage": "../compact/assets/barista-ots__portrait.webp",
+      "alt": "从女顾客肩后看向咖啡店员，店员确认饮品冷热，中景。",
+      "explanation": {
+        "meaning": "店员让顾客在热拿铁和冰拿铁之间做选择。",
+        "usage": "确认冷热等偏好时，用礼貌问句给出具体选项。",
+        "focus": "it（它）指刚点的拿铁；hot or iced（热的还是冰的）用 or（还是）连接两种选择。",
+        "example": "Would you like it with milk?",
+        "exampleTranslation": "你想加牛奶吗？"
+      }
+    },
+    {
+      "id": "line_004",
+      "speaker": "女顾客",
+      "english": "Hot, please.",
+      "translation": "热的，谢谢。",
+      "shotSize": "medium",
+      "image": "../compact/assets/customer-ots__landscape.webp",
+      "alt": "从咖啡店员肩后看向女顾客，顾客选择热饮，中景。",
+      "explanation": {
+        "meaning": "顾客选择热拿铁。",
+        "usage": "回答刚刚给出的选项时，直接说出自己的选择即可。",
+        "focus": "hot（热的）直接回答冷热选择；please（请／劳驾）让语气更礼貌。",
+        "example": "Iced, please.",
+        "exampleTranslation": "冰的，谢谢。"
+      }
+    },
+    {
+      "id": "line_005",
+      "speaker": "咖啡店员",
+      "english": "For here or to go?",
+      "translation": "在这里喝，还是带走？",
+      "shotSize": "close",
+      "image": "../compact/assets/barista-close__landscape.webp",
+      "portraitImage": "../compact/assets/barista-close__portrait.webp",
+      "alt": "咖啡店员确认堂食还是外带，近景。",
+      "explanation": {
+        "meaning": "店员确认顾客是在店里喝，还是打包带走。",
+        "usage": "点单时确认堂食或外带，饮品和食物都能使用。",
+        "focus": "for here（在这里享用）和 to go（打包带走）是一组点单表达。",
+        "example": "Is that for here or to go?",
+        "exampleTranslation": "这个是在这里用，还是带走？"
+      }
+    },
+    {
+      "id": "line_006",
+      "speaker": "女顾客",
+      "english": "For here, please.",
+      "translation": "在这里喝，谢谢。",
+      "shotSize": "wide",
+      "image": "../compact/assets/left-two__landscape.webp",
+      "alt": "女顾客与咖啡店员隔着吧台交谈，顾客选择在店内喝，双人全景。",
+      "explanation": {
+        "meaning": "顾客选择留在咖啡店里喝。",
+        "usage": "接在堂食或外带的询问后，明确告知自己的选择。",
+        "focus": "for here（在这里享用）回答上一句的地点选择；please（请／谢谢）保持礼貌。",
+        "example": "To go, please.",
+        "exampleTranslation": "请帮我打包带走。"
+      }
+    },
+    {
+      "id": "line_007",
+      "speaker": "咖啡店员",
+      "english": "Here's your latte. Enjoy!",
+      "translation": "这是你的拿铁，请慢用！",
+      "shotSize": "medium",
+      "image": "../compact/assets/barista-served-ots__landscape.webp",
+      "portraitImage": "../compact/assets/barista-served-ots__portrait.webp",
+      "alt": "从女顾客肩后看向店员，一杯拿铁已放在吧台上，中景。",
+      "explanation": {
+        "meaning": "店员把准备好的拿铁交给顾客，并祝她享用愉快。",
+        "usage": "把饮品或物品递给对方、放到对方面前时使用。",
+        "focus": "Here's（这是／给你）是 Here is（这里是）的缩写；Enjoy!（请慢用！）在这里祝对方享用愉快。",
+        "example": "Here's your tea. Enjoy!",
+        "exampleTranslation": "这是你的茶，请慢用！"
+      }
+    },
+    {
+      "id": "line_008",
+      "speaker": "女顾客",
+      "english": "Thank you!",
+      "translation": "谢谢！",
+      "shotSize": "close",
+      "image": "../compact/assets/customer-close__landscape.webp",
+      "portraitImage": "../compact/assets/customer-close__portrait.webp",
+      "alt": "女顾客向店员微笑道谢，近景。",
+      "explanation": {
+        "meaning": "顾客收到饮品后，向店员表达感谢。",
+        "usage": "收到饮品、物品或帮助后，都能用这句话道谢。",
+        "focus": "Thank you（谢谢）是完整的道谢表达；Thanks（谢谢）更简短。",
+        "example": "Thank you for your help.",
+        "exampleTranslation": "谢谢你的帮助。"
+      }
+    }
+  ]
+}

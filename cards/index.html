@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111b1b">
+  <meta name="description" content="一镜一张卡，一句一段故事。全屏镜头卡牌，听读、输入，收起每一幕。">
+  <title>一杯拿铁 · 镜头卡牌</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='20' fill='%23111b1b'/%3E%3Cpath d='M26 16h31v48H26z' fill='%23d9be86' transform='rotate(12 40 40)'/%3E%3Cpath d='M20 16h31v48H20z' fill='%23f5ecda'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="cards.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <div id="scene-backdrop" class="scene-backdrop" aria-hidden="true"></div>
+  <main id="app" class="game-shell" aria-busy="true" data-archived="0">
+    <header class="game-header">
+      <div class="scene-title"><span class="brand-mark" aria-hidden="true">✦</span><h1 id="lesson-title">一杯拿铁</h1></div>
+      <div class="course-summary" aria-label="学习进度"><strong id="progress-number">01 <span>/ 08</span></strong><span id="progress-caption" class="sr-only">当前进度</span><div class="progress-track"><div id="progress-fill"></div></div></div>
+      <div class="screen-actions">
+        <div class="segmented" role="group" aria-label="卡片方向"><button id="landscape-button" aria-label="横向卡片" title="横向卡片" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/></svg><span class="sr-only">横卡</span></button><button id="portrait-button" aria-label="竖向卡片" title="竖向卡片" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="3"/></svg><span class="sr-only">竖卡</span></button></div>
+        <button id="fullscreen-button" class="hud-button" aria-label="进入全屏" title="进入全屏" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+        <button id="settings-button" class="hud-button" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg></button>
+      </div>
+    </header>
+
+    <div id="table" class="card-table">
+      <nav class="memory-panel" aria-label="已收起的镜头卡牌">
+        <h2 id="memory-title" class="sr-only">已收起的镜头</h2><span id="memory-count" class="sr-only">0 张已看</span>
+        <div id="memory-grid" class="memory-grid" aria-label="已学卡牌，左右滑动查看"></div>
+      </nav>
+
+      <div id="play-area" class="play-area">
+      <section class="stage-column" aria-label="当前学习卡">
+        <span id="viewing-label" class="sr-only">正在学习</span>
+        <div id="focus-zone" class="focus-zone">
+          <div class="stage-glow" aria-hidden="true"></div>
+          <div id="active-card" class="active-card">
+            <div class="card-meta"><span id="card-number">镜头 01</span><span id="shot-label">中景</span></div>
+            <div id="image-slot" class="image-slot">
+              <img id="card-image" alt="" draggable="false">
+              <div id="image-error" class="image-error" hidden><span>画面暂未加载</span><button id="retry-image" class="secondary">重新加载</button></div>
+              <div id="card-back" class="card-back" hidden><p class="back-eyebrow">这一句，怎么用？</p><div class="explanation-scroll" tabindex="0" aria-label="卡片解释"><h2 id="back-meaning"></h2><div><h3>情境</h3><p id="back-usage"></p></div><div><h3>表达</h3><p id="back-focus"></p></div><div class="example-box"><h3>再试一句</h3><p id="back-example" lang="en"></p><p id="back-example-translation"></p></div></div></div>
+            </div>
+            <span id="shot-context" class="shot-context">完整画面</span>
+          </div>
+          <div id="deck-anchor" class="deck-anchor" aria-hidden="true"><span></span><span></span><span>✦</span></div>
+        </div>
+      </section>
+
+      <section class="learning-panel" aria-label="对白与学习操作">
+        <div class="card-caption"><span id="card-speaker" class="speaker-tag">咖啡店员</span><p id="card-english" lang="en">正在打开这一幕…</p><p id="card-translation"></p></div>
+        <div id="review-notice" class="review-notice" hidden><span>回看中</span><button id="return-button">继续学习 <span aria-hidden="true">↗</span></button></div>
+        <form id="practice-form" hidden autocomplete="off"><label for="answer" class="sr-only">输入这句英文</label><textarea id="answer" rows="3" placeholder="输入这句英文…" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="enter"></textarea><button id="check-answer" type="submit" class="check-button" aria-label="检查这一句" title="检查这一句"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button></form>
+        <audio id="recording-audio" controls hidden aria-label="回放我的跟读"></audio>
+        <div class="control-dock">
+          <div class="mode-tabs" role="group" aria-label="学习方式"><button id="watch-mode" aria-pressed="true">看听</button><button id="type-mode" aria-pressed="false">输入</button></div>
+          <div class="quick-controls">
+            <button id="listen-button" class="control-button listen-button" aria-label="听这一句" title="听这一句"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg><span class="sr-only">听这一句</span></button>
+            <div class="record-section"><button id="record-button" class="control-button" aria-label="录一遍跟读" title="录一遍跟读"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="12" rx="4"/><path d="M5 11v1a7 7 0 0 0 14 0v-1m-7 8v3m-4 0h8"/></svg><span id="record-label" class="sr-only">录一遍跟读</span></button><span id="record-caption" class="sr-only">仅在本页回放</span></div>
+            <button id="flip-button" class="control-button" aria-label="翻牌看解释" title="翻牌看解释"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 12h9l-3-3m3 3-3 3M6 12H2"/></svg><span id="flip-label" class="sr-only">翻牌看解释</span></button>
+            <button id="autoplay-button" class="control-button" aria-label="连续播放" title="连续播放"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="play-symbol" d="m8 5 11 7-11 7V5Z"/><path class="pause-symbol" d="M9 5v14m7-14v14"/></svg><span id="autoplay-label" class="sr-only">连续播放</span></button>
+          </div>
+          <button id="next-button" class="next-button" disabled><span>下一张</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+        </div>
+        <div id="completion" class="completion" hidden><span class="completion-star" aria-hidden="true">✦</span><div><h3>故事收齐了</h3><p id="completion-copy"></p></div><button id="restart-button" class="secondary">再来一次</button></div>
+      </section>
+      </div>
+      <div id="render-layer" class="render-layer" aria-hidden="true"></div>
+    </div>
+    <div id="feedback" class="feedback" role="status" aria-live="polite">正在加载课程…</div>
+  </main>
+  <div id="fatal-error" class="fatal-error" role="alert" hidden><h1>课程没有打开</h1><p id="fatal-message"></p><button id="reload-button" class="primary">重新打开</button></div>
+
+  <dialog id="settings-dialog"><form method="dialog" class="dialog-heading"><h2>设置</h2><button aria-label="关闭设置" class="icon-button">×</button></form><label class="setting-row"><span>卡牌动作</span><select id="motion-style"><option value="deal">发牌 · 轻旋转</option><option value="glide">轻移</option><option value="none">静止</option></select></label><label class="setting-row"><span>减少动画<small id="system-motion">跟随设备偏好</small></span><input id="reduce-motion" type="checkbox"></label><label class="setting-row"><span>显示中文</span><input id="show-translation" type="checkbox" checked></label><label class="setting-row"><span>听读速度</span><select id="speech-rate" aria-label="语音速度"><option value="0.75">0.75 倍</option><option value="1" selected>1.0 倍</option><option value="1.2">1.2 倍</option></select></label><p id="render-status" class="render-status">卡牌动效准备中</p><div class="import-area"><h3>换一段故事</h3><p>普通图片与课程清单组成的故事压缩包。</p><label class="secondary file-button">选择故事包<input id="package-file" type="file" accept=".zip,application/zip"></label><button id="download-package" class="text-button">下载当前故事包</button><p id="import-status" role="status" aria-live="polite"></p></div><div class="dialog-bottom"><button id="reset-course" class="text-button">重新开始</button><button id="restore-example" class="text-button" hidden>回到咖啡店</button><button id="about-button" class="text-button">玩法与说明</button></div></dialog>
+  <dialog id="about-dialog"><form method="dialog" class="dialog-heading"><h2>一张卡，一幕故事。</h2><button aria-label="关闭说明" class="icon-button">×</button></form><p id="lesson-description" class="dialog-copy"></p><ol class="how-to"><li><strong>看与听</strong><span>中央是当前镜头，下面是人物说的话。</span></li><li><strong>收起这一张</strong><span>点下一张，学完的镜头会飞到顶部。</span></li><li><strong>随时取回</strong><span>点顶部旧卡回看，翻牌看解释，再继续原来的进度。</span></li><li><strong>输入或跟读</strong><span>输入答对后换镜，也可以录下自己的跟读。</span></li></ol><p id="source-note" class="about-note"></p><p class="about-note">横竖屏自动适应，也可点顶栏的横卡、竖卡图标手动选择。图片完整显示；顶部牌列可左右滑动。电脑可用方向键换镜、F键翻牌。</p><p class="about-note">听读使用浏览器语音。跟读录音只在本页回放，不上传、不评分。刷新会重新开始，录音不会保存。</p></dialog>
+</body>
+</html>
