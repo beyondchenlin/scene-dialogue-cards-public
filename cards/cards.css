@@ -421,3 +421,93 @@
   background: transparent;
   border-color: transparent;
 }
+
+/* Completion-only desktop layout: keep the collected rail close to the last card.
+   The normal lesson, flipped reading, mobile and short landscape layouts stay unchanged. */
+@media (min-width: 1100px) and (min-height: 700px) {
+  .game-shell[data-completed="true"][data-layout="stack"][data-flipped="false"] .play-area {
+    justify-content: flex-start;
+    padding-top: clamp(12px, 1.6vh, 24px);
+  }
+}
+
+/* Circular swipe gallery: portrait mobile thumbnails are wide; landscape / desktop
+   thumbnails stand vertically. Crop only the tiny previews, never the main photo. */
+.game-shell { --memory-width: 88px; --memory-height: 156px; --rail-size: 180px; }
+.memory-card img { object-fit: cover; aspect-ratio: auto; }
+.memory-grid { align-items: center; }
+.focus-zone, .card-caption { touch-action: pan-y; }
+.focus-zone { cursor: grab; }
+.focus-zone:active { cursor: grabbing; }
+.swipe-hint {
+  white-space: nowrap;
+  color: #b6c3af;
+  opacity: .8;
+  font-size: 11px;
+  letter-spacing: .6px;
+  line-height: 1.4;
+  user-select: none;
+}
+#next-button, #restart-button { display: none !important; }
+@media (min-width: 1600px) {
+  .game-shell { --memory-width: 96px; --memory-height: 171px; --rail-size: 196px; }
+}
+@media (max-width: 1100px) and (orientation: portrait) {
+  .game-shell { --memory-width: 192px; --memory-height: 108px; --rail-size: 132px; }
+}
+@media (max-width: 690px) and (orientation: portrait) {
+  .game-shell { --memory-width: 160px; --memory-height: 90px; --rail-size: 112px; }
+  .control-dock .swipe-hint { font-size: 10px; justify-self: end; align-self: center; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .game-shell { --memory-width: 42px; --memory-height: 75px; --rail-size: 96px; }
+  .game-shell .memory-grid { padding-top: 4px; padding-bottom: 5px; }
+  .game-shell .swipe-hint { display: none; }
+}
+@media (orientation: landscape) and (max-height: 345px) {
+  .game-shell { --memory-width: 31.5px; --memory-height: 56px; --rail-size: 76px; }
+}
+/* Keep the earlier tighter desktop rhythm as soon as the top shelf has cards.
+   The lesson is now circular and no longer sets a terminal completed flag. */
+@media (min-width: 1100px) and (min-height: 700px) {
+  .game-shell:not([data-archived="0"])[data-layout="stack"][data-flipped="false"] .play-area {
+    justify-content: flex-start;
+    padding-top: clamp(12px, 1.6vh, 24px);
+  }
+}
+/* A soft keyboard takes priority over decorative previews and secondary actions.
+   The picture and text are scaled by fitActiveCard into the actual visible viewport. */
+.game-shell[data-keyboard="true"] {
+  --rail-size: 39px;
+  --memory-height: 31px;
+  --memory-width: 55px;
+  --play-gap: 4px;
+}
+.game-shell[data-keyboard="true"] .card-table { gap: 3px; }
+.game-shell[data-keyboard="true"] .memory-grid { padding: 1px 2px 2px; gap: 5px; }
+.game-shell[data-keyboard="true"] .memory-card,
+.game-shell[data-keyboard="true"][data-input-focus="true"][data-short="true"] .memory-card {
+  padding: 1px;
+  width: var(--memory-width);
+  flex-basis: var(--memory-width);
+  height: var(--memory-height);
+}
+.game-shell[data-keyboard="true"] .learning-panel { gap: 3px; }
+.game-shell[data-keyboard="true"] .speaker-tag,
+.game-shell[data-keyboard="true"] #card-translation,
+.game-shell[data-keyboard="true"] .swipe-hint { display: none; }
+.game-shell[data-keyboard="true"] .card-caption > p[lang="en"] {
+  font-size: clamp(17px, 3.8vw, 22px);
+  max-height: 2.3em;
+  line-height: 1.1;
+}
+.game-shell[data-keyboard="true"] .control-dock { padding: 2px 4px; gap: 4px; }
+.game-shell[data-keyboard="true"] #autoplay-button,
+.game-shell[data-keyboard="true"] #record-button { display: none; }
+.game-shell[data-keyboard="true"] #practice-form {
+  padding: 4px 7px 4px 12px;
+  gap: 6px;
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .game-shell[data-keyboard="true"] { --memory-width: 21.375px; --memory-height: 38px; --rail-size: 49px; }
+}

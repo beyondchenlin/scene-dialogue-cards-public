@@ -18,6 +18,8 @@ let speechEpoch = 0, sequenceEpoch = 0, playing = false, speechFinish = null;
 let micEpoch = 0, micPending = false, micFinalizing = false, micStream = null, recorder = null, recordingTimer = 0;
 let imageEpoch = 0, transitionEpoch = 0;
 let pendingMemoryFocus = null;
+let swipeStart = null;
+const thumbnailPortrait = () => innerWidth >= innerHeight || innerWidth > 1100;
 // Cache the actual dimensions of decoded photographs, including imported lessons.
 const imageRatios = new Map();
 
@@ -108,6 +110,11 @@ function fitActiveCard() {
 function measureViewport() {
   const viewport = visibleViewport(window);
   for (const [key, value] of Object.entries(viewport)) app.style.setProperty(`--visual-${key}`, `${value}px`);
+  // VisualViewport shrinks on real soft keyboards without necessarily changing innerHeight.
+  // Reserve space for a usable answer field; compact the rail/photo rather than scrolling the page.
+  app.dataset.keyboard = String(document.activeElement === answer
+    && (innerHeight - viewport.height >= Math.max(100, innerHeight * 0.16)
+      || viewport.height <= 470));
   app.dataset.short = String(viewport.height <= 560);
   setLayoutMode(viewport);
   const active = document.activeElement;
@@ -144,6 +151,7 @@ function renderGrid() {
   const fragment = document.createDocumentFragment();
   for (let index = 0; index < lesson.cards.length; index++) {
     const card = lesson.cards[index], unlocked = s.visitedIds.includes(card.id);
+    const verticalThumb = thumbnailPortrait();
     if (!unlocked) continue;
     const button = document.createElement('button');
     button.type = 'button'; button.className = 'memory-card'; button.dataset.index = String(index);
@@ -151,10 +159,13 @@ function renderGrid() {
     button.classList.toggle('locked', !unlocked);
     button.classList.toggle('current', index === s.index && !s.completed);
     button.classList.toggle('focused', index === s.focusIndex && unlocked);
+    button.classList.toggle('portrait-thumb', verticalThumb);
     button.setAttribute('aria-label', `第${index + 1}镜，${unlocked ? card.speaker + '，' + shotNames[card.shotSize] : '尚未解锁'}`);
     if (index === s.focusIndex) button.setAttribute('aria-current', 'true');
     if (unlocked) {
-      const img = document.createElement('img'); img.src = assetUrl(card.image); img.alt = '';
+      const img = document.createElement('img');
+      img.src = assetUrl(verticalThumb ? (card.portraitImage || card.image) : card.image);
+      img.alt = '';
       img.loading = 'lazy'; img.decoding = 'async'; img.draggable = false; button.append(img);
     } else {
       const blank = document.createElement('div'); blank.className = 'blank-card'; blank.textContent = pad(index + 1); button.append(blank);
@@ -244,7 +255,8 @@ function renderUI({ image = true, scheduleLayout = true } = {}) {
   $('next-button').disabled = locked || s.completed || s.reviewing || (s.mode === 'type' && !passed);
   $('next-button').firstElementChild.textContent = s.index === lesson.cards.length - 1 ? '收齐' : '下一张';
   $('next-button').setAttribute('aria-label', s.index === lesson.cards.length - 1 ? '收好最后一张' : '收好这张，进入下一镜');
-  $('next-button').hidden = s.completed;
+  // The card gallery uses gestures, drag and arrow keys; no terminal next/restart UI.
+  $('next-button').hidden = true;
   $('autoplay-button').hidden = s.completed;
   $('autoplay-button').disabled = (locked && !playing) || s.mode === 'type' || s.reviewing;
   const playLabel = playing ? '暂停连续播放' : '连续播放';
@@ -265,7 +277,8 @@ function renderUI({ image = true, scheduleLayout = true } = {}) {
   $('motion-style').disabled = $('reduce-motion').disabled = locked;
   $('package-file').disabled = $('download-package').disabled = locked;
   $('reset-course').disabled = $('restart-button').disabled = $('restore-example').disabled = locked;
-  $('completion').hidden = !s.completed;
+  $('completion').hidden = true;
+  $('restart-button').hidden = true;
   $('completion-copy').textContent = s.practiceDoneIds.length ? `你已看完 ${lesson.cards.length} 镜，并输入答对 ${s.practiceDoneIds.length} 句。` : '点开任意一张卡，再回味一句。';
   $('shot-context').textContent = orientation === 'portrait' && !card.portraitImage ? '原图完整显示 · 人物与道具保留' : `${shotNames[card.shotSize]} · 一张画面，一句对白。`;
   renderGrid();
@@ -290,7 +303,42 @@ function stopSequence() {
   if (state) renderUI({ image: false });
 }
 
-async function navigate(action, { kind = 'next', automatic = false } = {}) {
+
+/** Swipe/drag/arrow navigation is circular and never discards correct-answer records. */
+async function browse(direction, { automatic = false } = {}) {
+  if (!state || state.snapshot().flipped || busy || importBusy || micActive()) return false;
+  if (document.activeElement === answer) answer.blur();
+  return navigate(() => state.browse(direction), { kind: 'swipe', swipeDirection: direction, automatic });
+}
+
+function swipeAllowed(event) {
+  if (!state || busy || importBusy || micActive() || state.snapshot().flipped
+      || settings.open || about.open || !event.isPrimary) return false;
+  if (event.pointerType === 'mouse' && event.button !== 0) return false;
+  if (event.target.closest('button,a,input,textarea,select,audio,[role="button"]')) return false;
+  return true;
+}
+for (const surface of [$('focus-zone'), document.querySelector('.card-caption')]) {
+  surface.addEventListener('pointerdown', event => {
+    if (!swipeAllowed(event)) return;
+    swipeStart = { pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+      startedAt: performance.now(), surface };
+  }, { passive: true });
+}
+window.addEventListener('pointerup', event => {
+  if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+  const origin = swipeStart; swipeStart = null;
+  if (!state || state.snapshot().flipped || busy || importBusy || micActive()) return;
+  const dx = event.clientX - origin.x, dy = event.clientY - origin.y;
+  if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.35
+      || performance.now() - origin.startedAt > 1250) return;
+  // Left drags move forward; right drags move back, with both ends linked.
+  event.preventDefault();
+  void browse(dx < 0 ? 1 : -1);
+}, { passive: false });
+window.addEventListener('pointercancel', () => { swipeStart = null; }, { passive: true });
+
+async function navigate(action, { kind = 'next', automatic = false, swipeDirection = 1 } = {}) {
   if (busy || importBusy || micActive()) return false;
   if (!automatic) stopSequence(); else stopSpeech();
   saveDraft();
@@ -298,13 +346,28 @@ async function navigate(action, { kind = 'next', automatic = false } = {}) {
   if (!action()) return false;
   const token = ++transitionEpoch;
   busy = true; restoreDraft(); renderUI();
-  if (kind === 'next') revealMemory(oldIndex);
+  if (kind === 'next' || kind === 'swipe') revealMemory(oldIndex);
   else if (['review', 'return'].includes(kind)) revealMemory(state.snapshot().focusIndex);
   await nextFrame();
   if (disposed || token !== transitionEpoch) return false;
   const nextIndex = state.snapshot().focusIndex;
   try {
-    if (oldIndex !== nextIndex || kind === 'next') {
+    if (kind === 'swipe') {
+      const swapped = await renderer.fan({
+        outgoing: { src: oldSource, rect: oldRect },
+        incoming: { src: currentSrc(), rect: rect(slot) },
+        direction: swipeDirection,
+        style: $('motion-style').value,
+        reducedMotion: reduced()
+      });
+      if (!swapped && !reduced()) {
+        const dir = swipeDirection > 0 ? 1 : -1;
+        await $('active-card').animate([
+          { opacity: 0.55, transform: `translateX(${dir * 38}px) rotate(${dir * 11}deg)` },
+          { opacity: 1, transform: 'translateX(0) rotate(0)' }
+        ], { duration: 270, easing: 'cubic-bezier(.17,.78,.26,1)' }).finished.catch(() => {});
+      }
+    } else if (oldIndex !== nextIndex || kind === 'next') {
       await renderer.deal({
         outgoing: { src: oldSource, from: oldRect, to: memoryRect(oldIndex) },
         incoming: { src: currentSrc(), from: ['review', 'return'].includes(kind) ? memoryRect(nextIndex) : state.snapshot().completed ? rect(slot) : rect($('deck-anchor')), to: rect(slot) },
@@ -410,8 +473,7 @@ async function runSequence() {
     if (!spoken || token !== sequenceEpoch) break;
     await new Promise(resolve => setTimeout(resolve, 650));
     if (!playing || token !== sequenceEpoch) break;
-    await navigate(() => state.next(), { automatic: true });
-    if (state.snapshot().completed) break;
+    await browse(1, { automatic: true });
   }
   if (token === sequenceEpoch) { playing = false; renderUI({ image: false }); }
 }
@@ -491,7 +553,7 @@ async function installLesson(input, assets = new Map()) {
   busy = true; renderUI({ image: false });
   await renderer.deal({ incoming: { src: currentSrc(), from: rect($('deck-anchor')), to: rect(slot) }, style: $('motion-style').value, reducedMotion: reduced() });
   busy = false; renderUI({ image: false });
-  feedback('第一张卡已到手。先听一遍，再把它收进故事宫格。');
+  feedback(`第一张卡已到手。左右滑动换镜，${lesson.cards.length} 张卡可循环。`);
 }
 
 async function loadExample() {
@@ -549,7 +611,7 @@ grid.addEventListener('click', event => {
 for (const [id, mode] of [['watch-mode', 'watch'], ['type-mode', 'type']]) $(id).addEventListener('click', () => {
   if (busy || importBusy || micActive()) return;
   stopSequence(); saveDraft(); state.setMode(mode); renderUI({ image: false }); restoreDraft();
-  feedback(mode === 'type' ? '输入中央卡片中的英文。答对后再进入下一镜。' : '听与看由你控制，随时翻牌查看解释。');
+  feedback(mode === 'type' ? '输入英文可检查准确度，也可以随时左右滑动换镜。' : '左右滑动换镜，翻牌可看解释。');
 });
 answer.addEventListener('input', () => {
   saveDraft();
@@ -559,7 +621,7 @@ $('practice-form').addEventListener('submit', event => {
   event.preventDefault(); if (busy || importBusy || micActive()) return;
   saveDraft(); const result = state.submit(answer.value);
   renderUI({ image: false });
-  feedback(result.correct ? '这一句输入正确。准备好后，收牌进入下一镜。' : result.reason === 'empty' ? '先输入这一句，再来检查。' : '还差一点。对照原句检查单词，不必修改大小写和标点。', result.correct ? 'success' : 'error', 'answer');
+  feedback(result.correct ? '这一句输入正确。左右滑动可切换镜头。' : result.reason === 'empty' ? '先输入这一句，再来检查。' : '还差一点。对照原句检查单词，不必修改大小写和标点。', result.correct ? 'success' : 'error', 'answer');
 });
 $('listen-button').addEventListener('click', () => { if (busy || importBusy || micActive()) return; stopSequence(); void say(focused()); });
 $('autoplay-button').addEventListener('click', () => void runSequence());
@@ -617,8 +679,8 @@ document.addEventListener('keydown', event => {
   if (event.key.toLowerCase() === 'f') { event.preventDefault(); void flipCard(); return; }
   // Keep arrow keys available for scrolling the focused explanation.
   if (state.snapshot().flipped) return;
-  if (event.key === 'ArrowRight') { event.preventDefault(); void navigate(() => state.next()); }
-  if (event.key === 'ArrowLeft') { event.preventDefault(); void navigate(() => state.previousFocus(), { kind: 'review' }); }
+  if (event.key === 'ArrowRight') { event.preventDefault(); void browse(1); }
+  if (event.key === 'ArrowLeft') { event.preventDefault(); void browse(-1); }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopSequence(); if (micPending) { micEpoch++; micPending = false; } closeMicrophone(); if (state) renderUI({ image: false }); } });
 window.addEventListener('pagehide', event => {

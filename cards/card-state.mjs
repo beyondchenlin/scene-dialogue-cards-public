@@ -160,10 +160,30 @@ export class CardLessonState {
     return true;
   }
 
-  /** Focus can move only to the current card or an already unlocked history slot. */
+  /**
+   * Free two-way browsing: the first and last card connect as a ring.
+   * Visiting is cumulative, and correctness records never reset on a wrap.
+   * This is intentionally separate from the legacy gated next() transition.
+   */
+  browse(direction) {
+    if (direction !== 1 && direction !== -1) return false;
+    if (this.lesson.cards.length === 1) {
+      this.#visitedIds.add(this.lesson.cards[0].id);
+      this.#flipped = false;
+      return true;
+    }
+    this.#visitedIds.add(this.lesson.cards[this.#focusIndex].id);
+    this.#focusIndex = (this.#focusIndex + direction + this.lesson.cards.length) % this.lesson.cards.length;
+    this.#index = this.#focusIndex;
+    this.#flipped = false;
+    this.#completed = false;
+    return true;
+  }
+
+  /** Focus can move to the current card or any already visited card. */
   open(index) {
     if (!Number.isInteger(index) || index < 0 || index >= this.lesson.cards.length
-        || (!this.#completed && index > this.#index)) return false;
+        || (!this.#completed && index > this.#index && !this.#visitedIds.has(this.lesson.cards[index].id))) return false;
     this.#focusIndex = index;
     this.#flipped = false;
     return true;

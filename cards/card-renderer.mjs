@@ -252,6 +252,61 @@ export class CardTableRenderer {
     }
   }
 
+  /**
+   * Touch/mouse gallery swipe: two flat photographic cards fan around opposite
+   * sides of the table, with a curved path and opposing rotation.
+   * It is distinct from the old one-way archive/deal animation.
+   */
+  async fan({ outgoing, incoming, direction = 1, style = 'deal', reducedMotion = false }) {
+    if (![1, -1].includes(direction)) return false;
+    const operation = this.begin([outgoing?.src, incoming?.src].filter(Boolean));
+    try {
+      if (!this.current(operation)) return false;
+      const from = copyRect(outgoing?.rect), to = copyRect(incoming?.rect);
+      const [oldAsset, nextAsset] = await Promise.all([
+        this.texture(outgoing.src, operation), this.texture(incoming.src, operation)
+      ]);
+      if (!this.current(operation)) return false;
+      const previous = this.makeCard(oldAsset, 20);
+      const next = this.makeCard(nextAsset, 40);
+      this.keepOnly(previous, next);
+      this.display = { card: next, src: incoming.src, rect: to, back: false };
+      const duration = this.duration(style, reducedMotion);
+      const distance = Math.min(250, Math.max(90, this.bounds.width * 0.28));
+      const success = await this.animate(operation, duration, progress => {
+        const t = easeInOut(progress);
+        const arc = Math.sin(Math.PI * t);
+        const oldRect = { ...from,
+          left: from.left - direction * distance * t,
+          top: from.top - arc * 42
+        };
+        const newRect = { ...to,
+          left: to.left + direction * distance * (1 - t),
+          top: to.top - arc * 42
+        };
+        // Swing out like spreading two cards from a fan; do not rotate the photo content itself.
+        this.place(previous, oldRect, {
+          rotationZ: -direction * 0.32 * t,
+          rotationY: direction * 0.10 * t,
+          lift: arc * 12, scale: 1 - t * 0.10
+        });
+        this.place(next, newRect, {
+          rotationZ: direction * 0.32 * (1 - t),
+          rotationY: -direction * 0.10 * (1 - t),
+          lift: arc * 32, scale: 0.90 + t * 0.10
+        });
+      });
+      if (!success || !this.current(operation)) return false;
+      this.keepOnly(next);
+      this.place(next, to);
+      this.trimCache();
+      return this.render();
+    } catch (error) {
+      if (this.current(operation) && error.name !== 'AbortError') this.unavailable();
+      return false;
+    }
+  }
+
   async flip({ src, rect, toBack, style = 'deal', reducedMotion = false }) {
     const wasBack = this.display?.src === src ? this.display.back : !toBack;
     const from = copyRect(this.display?.src === src ? this.display.rect : rect);
