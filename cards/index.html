@@ -32,7 +32,7 @@
       <div id="play-area" class="play-area">
       <section class="stage-column" aria-label="当前学习卡">
         <span id="viewing-label" class="sr-only">正在学习</span>
-        <div id="focus-zone" class="focus-zone">
+        <div id="focus-zone" class="focus-zone" tabindex="0" aria-label="当前镜头卡，左右滑动或按左右方向键换镜">
           <div class="stage-glow" aria-hidden="true"></div>
           <div id="active-card" class="active-card">
             <div class="card-meta"><span id="card-number">镜头 01</span><span id="shot-label">中景</span></div>
@@ -60,9 +60,10 @@
             <button id="flip-button" class="control-button" aria-label="翻牌看解释" title="翻牌看解释"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 12h9l-3-3m3 3-3 3M6 12H2"/></svg><span id="flip-label" class="sr-only">翻牌看解释</span></button>
             <button id="autoplay-button" class="control-button" aria-label="连续播放" title="连续播放"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="play-symbol" d="m8 5 11 7-11 7V5Z"/><path class="pause-symbol" d="M9 5v14m7-14v14"/></svg><span id="autoplay-label" class="sr-only">连续播放</span></button>
           </div>
-          <button id="next-button" class="next-button" disabled><span>下一张</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+          <span id="swipe-hint" class="swipe-hint" aria-label="向左滑动查看下一张，向右滑动查看上一张，首尾循环">‹&nbsp; 左右滑动 &nbsp;›</span>
+          <button id="next-button" class="next-button" disabled hidden><span>下一张</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
         </div>
-        <div id="completion" class="completion" hidden><span class="completion-star" aria-hidden="true">✦</span><div><h3>故事收齐了</h3><p id="completion-copy"></p></div><button id="restart-button" class="secondary">再来一次</button></div>
+        <div id="completion" class="completion" hidden><span class="completion-star" aria-hidden="true">✦</span><div><h3>故事收齐了</h3><p id="completion-copy"></p></div><button id="restart-button" class="secondary" hidden>再来一次</button></div>
       </section>
       </div>
       <div id="render-layer" class="render-layer" aria-hidden="true"></div>
@@ -72,6 +73,6 @@
   <div id="fatal-error" class="fatal-error" role="alert" hidden><h1>课程没有打开</h1><p id="fatal-message"></p><button id="reload-button" class="primary">重新打开</button></div>
 
   <dialog id="settings-dialog"><form method="dialog" class="dialog-heading"><h2>设置</h2><button aria-label="关闭设置" class="icon-button">×</button></form><label class="setting-row"><span>卡牌动作</span><select id="motion-style"><option value="deal">发牌 · 轻旋转</option><option value="glide">轻移</option><option value="none">静止</option></select></label><label class="setting-row"><span>减少动画<small id="system-motion">跟随设备偏好</small></span><input id="reduce-motion" type="checkbox"></label><label class="setting-row"><span>显示中文</span><input id="show-translation" type="checkbox" checked></label><label class="setting-row"><span>听读速度</span><select id="speech-rate" aria-label="语音速度"><option value="0.75">0.75 倍</option><option value="1" selected>1.0 倍</option><option value="1.2">1.2 倍</option></select></label><p id="render-status" class="render-status">卡牌动效准备中</p><div class="import-area"><h3>换一段故事</h3><p>普通图片与课程清单组成的故事压缩包。</p><label class="secondary file-button">选择故事包<input id="package-file" type="file" accept=".zip,application/zip"></label><button id="download-package" class="text-button">下载当前故事包</button><p id="import-status" role="status" aria-live="polite"></p></div><div class="dialog-bottom"><button id="reset-course" class="text-button">重新开始</button><button id="restore-example" class="text-button" hidden>回到咖啡店</button><button id="about-button" class="text-button">玩法与说明</button></div></dialog>
-  <dialog id="about-dialog"><form method="dialog" class="dialog-heading"><h2>一张卡，一幕故事。</h2><button aria-label="关闭说明" class="icon-button">×</button></form><p id="lesson-description" class="dialog-copy"></p><ol class="how-to"><li><strong>看与听</strong><span>中央是当前镜头，下面是人物说的话。</span></li><li><strong>收起这一张</strong><span>点下一张，学完的镜头会飞到顶部。</span></li><li><strong>随时取回</strong><span>点顶部旧卡回看，翻牌看解释，再继续原来的进度。</span></li><li><strong>输入或跟读</strong><span>输入答对后换镜，也可以录下自己的跟读。</span></li></ol><p id="source-note" class="about-note"></p><p class="about-note">横竖屏自动适应，也可点顶栏的横卡、竖卡图标手动选择。图片完整显示；顶部牌列可左右滑动。电脑可用方向键换镜、F键翻牌。</p><p class="about-note">听读使用浏览器语音。跟读录音只在本页回放，不上传、不评分。刷新会重新开始，录音不会保存。</p></dialog>
+  <dialog id="about-dialog"><form method="dialog" class="dialog-heading"><h2>一张卡，一幕故事。</h2><button aria-label="关闭说明" class="icon-button">×</button></form><p id="lesson-description" class="dialog-copy"></p><ol class="how-to"><li><strong>看与听</strong><span>中央是当前镜头，下面是人物说的话。</span></li><li><strong>收起这一张</strong><span>点下一张，学完的镜头会飞到顶部。</span></li><li><strong>随时取回</strong><span>点顶部旧卡回看，翻牌看解释，再继续原来的进度。</span></li><li><strong>输入或跟读</strong><span>输入答对后换镜，也可以录下自己的跟读。</span></li></ol><p id="source-note" class="about-note"></p><p class="about-note">横竖屏自动适应，也可点顶栏的横卡、竖卡图标手动选择。图片完整显示；顶部牌列可左右滑动。电脑可用鼠标拖动或方向键循环换镜，F键翻牌。手机和平板可左右滑动；首尾相连。</p><p class="about-note">听读使用浏览器语音。跟读录音只在本页回放，不上传、不评分。刷新会重新开始，录音不会保存。</p></dialog>
 </body>
 </html>
